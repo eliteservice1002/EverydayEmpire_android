@@ -1095,6 +1095,7 @@ public class MainActivity extends AppCompatActivity {
                 .appendQueryParameter("user", user.id + "")
                 .appendQueryParameter("package", BuildConfig.APPLICATION_ID)
                 .build();
+        Log.e("Link", link.toString());
         Task<ShortDynamicLink> task = FirebaseDynamicLinks.getInstance()
                 .createDynamicLink()
                 .setLink(link)
@@ -1110,6 +1111,7 @@ public class MainActivity extends AppCompatActivity {
                 ShortDynamicLink sdl = result.getResult();
                 shareLink(sdl.getShortLink(), target, R.string.share_user_chooser);
             } else {
+                Log.e("error", result.getException().getMessage());
                 Log.v(TAG, "Could not generate short dynamic link for user.");
             }
         });

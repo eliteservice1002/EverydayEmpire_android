@@ -121,8 +121,6 @@ public class RecorderActivity extends AppCompatActivity {
         else if (requestCode == SharedConstants.REQUEST_CODE_PICK_BARPAD_SONG && resultCode == RESULT_OK && data != null) {
             Song song = data.getParcelableExtra(EXTRA_SONG);
             Uri audio = data.getParcelableExtra(EXTRA_AUDIO);
-            Barpad barpad = data.getParcelableExtra(EXTRA_BARPAD);
-            Log.e("BARPAD", barpad.name);
             setupSong(song, audio);
         }
 
@@ -628,6 +626,7 @@ public class RecorderActivity extends AppCompatActivity {
                     dialog.dismiss();
                     Intent intent = Intent.makeRestartActivityTask(getComponentName());
                     Song song = getIntent().getParcelableExtra(EXTRA_SONG);
+
                     if (song != null) {
                         intent.putExtra(EXTRA_SONG, song);
                     }
@@ -635,6 +634,10 @@ public class RecorderActivity extends AppCompatActivity {
                     Uri audio = getIntent().getParcelableExtra(EXTRA_AUDIO);
                     if (audio != null) {
                         intent.putExtra(EXTRA_AUDIO, audio);
+                    }
+                    Barpad barpad = getIntent().getParcelableExtra(EXTRA_BARPAD);
+                    if (barpad != null) {
+                        intent.putExtra(EXTRA_BARPAD, barpad);
                     }
 
                     startActivity(intent);

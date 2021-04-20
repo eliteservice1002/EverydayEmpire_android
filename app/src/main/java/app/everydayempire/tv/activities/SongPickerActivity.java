@@ -76,7 +76,8 @@ public class SongPickerActivity extends AppCompatActivity {
     public static final String EXTRA_FROM_HOME = "from_home";
     public static final String EXTRA_FROM_BARPAD = "from_barpad";
     private static final String TAG = "SongPickerActivity";
-    public static final String EXTRA_BARPAD_VALUE = "barpad_value";
+    public static final String EXTRA_BARPAD_NAME = "barpad_name";
+    public static final String EXTRA_BARPAD_DESCRIPTION = "barpad_description";
 
     private final List<Disposable> mDisposables = new ArrayList<>();
     private SongPickerActivityViewModel mModel;
@@ -256,7 +257,8 @@ public class SongPickerActivity extends AppCompatActivity {
 
     private void closeWithSelection(@Nullable Song song, Uri file) {
         boolean barpad = getIntent().getBooleanExtra(EXTRA_FROM_BARPAD, false);
-        int barpad_id = getIntent().getIntExtra(EXTRA_BARPAD_VALUE, 0);
+        String barpad_name = getIntent().getStringExtra(EXTRA_BARPAD_NAME);
+        String barpad_description = getIntent().getStringExtra(EXTRA_BARPAD_DESCRIPTION);
         Intent data = new Intent();
 
         if (song != null) {
@@ -267,7 +269,8 @@ public class SongPickerActivity extends AppCompatActivity {
             data.putExtra(MainActivity.EXTRA_AUDIO, file);
         }
 
-        data.putExtra(MainActivity.EXTRA_BARPAD_VALUE, barpad_id);
+        data.putExtra(EXTRA_BARPAD_NAME, barpad_name);
+        data.putExtra(EXTRA_BARPAD_DESCRIPTION, barpad_description);
 
         setResult(RESULT_OK, data);
         finish();

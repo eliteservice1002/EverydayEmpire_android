@@ -132,7 +132,7 @@ public class PhoneLoginFirebaseActivity extends PhoneLoginBaseActivity {
         if (errors.isEmpty()) {
             PhoneAuthProvider.getInstance().verifyPhoneNumber(
                     "+" + mModel.cc + mModel.phone,
-                    60,
+                    120,
                     TimeUnit.SECONDS,
                     this,
                     mCallbacks);

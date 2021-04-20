@@ -69,7 +69,7 @@
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:strokeColor="#000000"
+        app:strokeColor="#FFFFFF"
         tools:text="Action"
         tools:visibility="visible" />
 

@@ -64,6 +64,8 @@ import static app.everydayempire.tv.activities.MainActivity.EXTRA_AUDIO;
 import static app.everydayempire.tv.activities.MainActivity.EXTRA_SONG;
 import static app.everydayempire.tv.activities.MainActivity.EXTRA_USER;
 import static app.everydayempire.tv.activities.RecorderActivity.EXTRA_BARPAD;
+import static app.everydayempire.tv.activities.SongPickerActivity.EXTRA_BARPAD_DESCRIPTION;
+import static app.everydayempire.tv.activities.SongPickerActivity.EXTRA_BARPAD_NAME;
 
 public class EditBarpadFragment extends Fragment {
 
@@ -90,14 +92,28 @@ public class EditBarpadFragment extends Fragment {
             Log.e("Music", "barpad.song.title");
             Song song = data.getParcelableExtra(EXTRA_SONG);
             Uri file = data.getParcelableExtra(EXTRA_AUDIO);
-            updateBarpad(song, file);
+            String name = data.getStringExtra(EXTRA_BARPAD_NAME);
+            Log.e("name", name);
+            String description = data.getStringExtra(EXTRA_BARPAD_DESCRIPTION);
+            updateBarpad(song, file, name, description);
         }
     }
 
-    private void updateBarpad(Song song, Uri file) {
+    private void updateBarpad(Song song, Uri file, String name, String description) {
         Barpad barpad = mModel.barpad.getValue();
-        barpad.song = song;
-        mModel.barpad.setValue(barpad);
+        if (barpad != null) {
+            barpad.song = song;
+            barpad.name = name;
+            barpad.description = description;
+            mModel.barpad.setValue(barpad);
+        }
+        else {
+            Barpad barpad_new = new Barpad();
+            barpad_new.song = song;
+            barpad_new.name = name;
+            barpad_new.description = description;
+            mModel.barpad.setValue(barpad_new);
+        }
     }
 
     @Override
@@ -178,6 +194,14 @@ public class EditBarpadFragment extends Fragment {
         ImageButton back = view.findViewById(R.id.header_back);
         back.setImageResource(R.drawable.ic_back);
         back.setOnClickListener(c -> {
+            if (mMediaPlayer != null) {
+                if (mMediaPlayer.isPlaying()) {
+                    mMediaPlayer.stop();
+                }
+
+                mMediaPlayer.release();
+                mMediaPlayer = null;
+            }
             ((MainActivity)requireActivity()).popBackStack();
         });
         back.setVisibility(View.VISIBLE);
@@ -269,24 +293,6 @@ public class EditBarpadFragment extends Fragment {
 
         TextView change = view.findViewById(R.id.change_beat);
 
-        change.setOnClickListener(c -> {
-            Intent intent = new Intent(requireActivity(), SongPickerActivity.class);
-            intent.putExtra(SongPickerActivity.EXTRA_FROM_HOME, true);
-            intent.putExtra(SongPickerActivity.EXTRA_FROM_BARPAD, true);
-            intent.putExtra(SongPickerActivity.EXTRA_BARPAD_VALUE, mBarpad);
-            startActivityForResult(intent, SharedConstants.REQUEST_CODE_PICK_BARPAD_SONG);
-        });
-
-        Button select = view.findViewById(R.id.select_beat_button);
-        select.setVisibility(View.VISIBLE);
-        select.setText(R.string.select_beat);
-        select.setOnClickListener(c -> {
-            Intent intent = new Intent(requireActivity(), SongPickerActivity.class);
-            intent.putExtra(SongPickerActivity.EXTRA_FROM_HOME, true);
-            intent.putExtra(SongPickerActivity.EXTRA_FROM_BARPAD, true);
-            intent.putExtra(SongPickerActivity.EXTRA_BARPAD_VALUE, mBarpad);
-            startActivityForResult(intent, SharedConstants.REQUEST_CODE_PICK_BARPAD_SONG);
-        });
 
         Disposable disposable;
         TextInputLayout barpad_name = view.findViewById(R.id.barpad_name);
@@ -322,6 +328,26 @@ public class EditBarpadFragment extends Fragment {
                     mModel.description = editable != null ? editable.toString() : null;
                 });
 
+        Button select = view.findViewById(R.id.select_beat_button);
+        select.setVisibility(View.VISIBLE);
+        select.setText(R.string.select_beat);
+        select.setOnClickListener(c -> {
+            Intent intent = new Intent(requireActivity(), SongPickerActivity.class);
+            intent.putExtra(SongPickerActivity.EXTRA_FROM_HOME, true);
+            intent.putExtra(SongPickerActivity.EXTRA_FROM_BARPAD, true);
+            intent.putExtra(EXTRA_BARPAD_NAME, barpad_name.getEditText().getText().toString());
+            intent.putExtra(EXTRA_BARPAD_DESCRIPTION, barpad_description.getEditText().getText().toString());
+            startActivityForResult(intent, SharedConstants.REQUEST_CODE_PICK_BARPAD_SONG);
+        });
+
+        change.setOnClickListener(c -> {
+            Intent intent = new Intent(requireActivity(), SongPickerActivity.class);
+            intent.putExtra(SongPickerActivity.EXTRA_FROM_HOME, true);
+            intent.putExtra(SongPickerActivity.EXTRA_FROM_BARPAD, true);
+            intent.putExtra(EXTRA_BARPAD_NAME, barpad_name.getEditText().getText().toString());
+            intent.putExtra(EXTRA_BARPAD_DESCRIPTION, barpad_description.getEditText().getText().toString());
+            startActivityForResult(intent, SharedConstants.REQUEST_CODE_PICK_BARPAD_SONG);
+        });
         mModel.errors.observe(getViewLifecycleOwner(), errors -> {
             barpad_name.setError(null);
             barpad_description.setError(null);
@@ -358,7 +384,8 @@ public class EditBarpadFragment extends Fragment {
                         Intent intent = new Intent(requireActivity(), SongPickerActivity.class);
                         intent.putExtra(SongPickerActivity.EXTRA_FROM_HOME, true);
                         intent.putExtra(SongPickerActivity.EXTRA_FROM_BARPAD, true);
-                        intent.putExtra(SongPickerActivity.EXTRA_BARPAD_VALUE, mBarpad);
+                        intent.putExtra(EXTRA_BARPAD_NAME, barpad_name.getEditText().getText().toString());
+                        intent.putExtra(EXTRA_BARPAD_DESCRIPTION, barpad_description.getEditText().getText().toString());
                         requireActivity().startActivityForResult(intent, SharedConstants.REQUEST_CODE_PICK_BARPAD_SONG);
                     });
 
@@ -410,6 +437,7 @@ public class EditBarpadFragment extends Fragment {
         public void run() {
             if (mMediaPlayer != null) {
                 sTime = mMediaPlayer.getCurrentPosition();
+                eTime = mMediaPlayer.getDuration();
                 seekBar.setProgress(sTime);
                 hdlr.postDelayed(this, 100);
             }
@@ -573,7 +601,15 @@ public class EditBarpadFragment extends Fragment {
         mModel.song = song;
 
         mMediaPlayer = MediaPlayer.create(this.requireActivity(), file);
-        mMediaPlayer.setOnCompletionListener(mp -> mMediaPlayer = null);
+        mMediaPlayer.setOnCompletionListener(mp -> {
+            if (mMediaPlayer.isPlaying()){
+                playBtn.setVisibility(View.GONE);
+                pauseBtn.setVisibility(View.VISIBLE);
+            }else {
+                playBtn.setVisibility(View.VISIBLE);
+                pauseBtn.setVisibility(View.GONE);
+            }
+        });
 
         mMediaPlayer.start();
         eTime = mMediaPlayer.getDuration();
